@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Controls;
+using DesktopLaunchpad.Cards;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -44,6 +46,7 @@ public partial class LaunchpadWindow : Window
 
         MoveToMonitorUnderMouse();
         UpdateClock();
+        LoadCards();
         _clock.Start();
 
         Show();
@@ -87,15 +90,48 @@ public partial class LaunchpadWindow : Window
         Height = 300;
     }
 
+    /// <summary>Re-reads cards.json so edits show up the next time the launchpad opens.</summary>
+    private void LoadCards()
+    {
+        CardPanel.Children.Clear();
+        try
+        {
+            var cards = CardStore.Load();
+            if (cards.Count == 0)
+            {
+                CardPanel.Children.Add(CardViewFactory.CreateMessage("No cards yet",
+                    "Right-click the tray icon and choose Edit cards to add some."));
+                return;
+            }
+            foreach (var card in cards)
+                CardPanel.Children.Add(CardViewFactory.Create(card, OnCardClicked));
+        }
+        catch (CardFileException ex)
+        {
+            CardPanel.Children.Add(CardViewFactory.CreateMessage("Couldn't load your cards", ex.Message, isError: true));
+        }
+    }
+
+    private void OnCardClicked(CardDefinition card)
+    {
+        HideLaunchpad();
+        try
+        {
+            Launcher.Launch(card);
+        }
+        catch (LaunchException ex)
+        {
+            MessageBox.Show(ex.Message, "Desktop Launchpad", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
     private void UpdateClock() =>
         ClockText.Text = DateTime.Now.ToString("dddd, MMMM d  ·  h:mm tt");
 
     private void Backdrop_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        // Only clicks on empty space close the launchpad, not clicks on cards.
-        if (e.OriginalSource == Backdrop || e.OriginalSource == CardCanvas)
-            HideLaunchpad();
+        // Cards and scroll bars mark their clicks as handled, so anything
+        // that reaches here is a click on empty space.
+        HideLaunchpad();
     }
-
-    private void Card_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => e.Handled = true;
 }
