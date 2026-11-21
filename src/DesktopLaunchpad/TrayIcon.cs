@@ -19,13 +19,22 @@ public sealed class TrayIcon : IDisposable
 
         _icon = new Forms.NotifyIcon
         {
-            // Placeholder icon until the app gets its own.
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = LoadAppIcon(),
             Text = "Desktop Launchpad",
             ContextMenuStrip = menu,
             Visible = true,
         };
         _icon.DoubleClick += (_, _) => onOpen();
+    }
+
+    /// <summary>Loads Assets/launchpad.ico at the size Windows uses for tray icons.</summary>
+    private static System.Drawing.Icon LoadAppIcon()
+    {
+        var uri = new Uri("pack://application:,,,/Assets/launchpad.ico");
+        var resource = System.Windows.Application.GetResourceStream(uri);
+        if (resource is null) return System.Drawing.SystemIcons.Application;
+        using var stream = resource.Stream;
+        return new System.Drawing.Icon(stream, Forms.SystemInformation.SmallIconSize);
     }
 
     public void ShowInfo(string title, string text) =>

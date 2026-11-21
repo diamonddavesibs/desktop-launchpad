@@ -12,12 +12,17 @@
     <AssemblyName>DesktopLaunchpad</AssemblyName>
     <!-- Lets the project compile on non-Windows build machines (CI). -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationIcon>Assets\launchpad.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- WinForms and WPF both define these names; prefer the WPF ones. -->
     <Using Remove="System.Windows.Forms" />
     <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\launchpad.ico" />
   </ItemGroup>
 
 </Project>
