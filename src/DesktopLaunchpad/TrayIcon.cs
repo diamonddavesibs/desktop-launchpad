@@ -1,0 +1,51 @@
+using Forms = System.Windows.Forms;
+
+namespace DesktopLaunchpad;
+
+/// <summary>
+/// The icon in the Windows notification area, with Open and Exit menu items.
+/// Double-clicking the icon opens the launchpad.
+/// </summary>
+public sealed class TrayIcon : IDisposable
+{
+    private readonly Forms.NotifyIcon _icon;
+
+    public TrayIcon(Action onOpen, Action onExit)
+    {
+        var menu = new Forms.ContextMenuStrip();
+        menu.Items.Add("Open launchpad (Ctrl+Space)", null, (_, _) => onOpen());
+        menu.Items.Add(new Forms.ToolStripSeparator());
+        menu.Items.Add("Exit", null, (_, _) => onExit());
+
+        _icon = new Forms.NotifyIcon
+        {
+            Icon = LoadAppIcon(),
+            Text = "Desktop Launchpad",
+            ContextMenuStrip = menu,
+            Visible = true,
+        };
+        _icon.DoubleClick += (_, _) => onOpen();
+    }
+
+    /// <summary>Loads Assets/launchpad.ico at the size Windows uses for tray icons.</summary>
+    private static System.Drawing.Icon LoadAppIcon()
+    {
+        var uri = new Uri("pack://application:,,,/Assets/launchpad.ico");
+        var resource = System.Windows.Application.GetResourceStream(uri);
+        if (resource is null) return System.Drawing.SystemIcons.Application;
+        using var stream = resource.Stream;
+        return new System.Drawing.Icon(stream, Forms.SystemInformation.SmallIconSize);
+    }
+
+    public void ShowInfo(string title, string text) =>
+        _icon.ShowBalloonTip(3000, title, text, Forms.ToolTipIcon.Info);
+
+    public void ShowWarning(string title, string text) =>
+        _icon.ShowBalloonTip(5000, title, text, Forms.ToolTipIcon.Warning);
+
+    public void Dispose()
+    {
+        _icon.Visible = false;
+        _icon.Dispose();
+    }
+}
