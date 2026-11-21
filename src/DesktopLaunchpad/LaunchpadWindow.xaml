@@ -1,0 +1,42 @@
+<Window x:Class="DesktopLaunchpad.LaunchpadWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Desktop Launchpad"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Opacity="0">
+
+    <!-- Dimmed backdrop over the whole screen. Clicking empty space closes the launchpad. -->
+    <Grid x:Name="Backdrop" Background="#CC101418" MouseLeftButtonDown="Backdrop_MouseLeftButtonDown">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="48,40,48,0">
+            <TextBlock Text="Launchpad" FontSize="36" FontWeight="SemiBold" Foreground="White" />
+            <TextBlock x:Name="ClockText" FontSize="16" Foreground="#B0BAC5" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <!-- Cards go here. Step 2 fills this canvas from the settings file. -->
+        <Canvas x:Name="CardCanvas" Grid.Row="1" Margin="48,24,48,24" Background="Transparent">
+            <Border Canvas.Left="0" Canvas.Top="0" Width="320" Padding="20"
+                    CornerRadius="14" Background="#26FFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1"
+                    MouseLeftButtonDown="Card_MouseLeftButtonDown">
+                <StackPanel>
+                    <TextBlock Text="No cards yet" FontSize="18" FontWeight="SemiBold" Foreground="White" />
+                    <TextBlock TextWrapping="Wrap" Foreground="#C8D0D8" Margin="0,6,0,0"
+                               Text="Program and website cards arrive in the next step." />
+                </StackPanel>
+            </Border>
+        </Canvas>
+
+        <TextBlock Grid.Row="2" Margin="48,0,48,24" Foreground="#80909C" FontSize="13"
+                   Text="Esc or click empty space to close  ·  Ctrl+Space to toggle" />
+    </Grid>
+</Window>
