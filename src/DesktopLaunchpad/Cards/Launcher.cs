@@ -20,6 +20,12 @@ public static class Launcher
     /// <summary>Starts the card's target. Throws <see cref="LaunchException"/> with a readable message on failure.</summary>
     public static void Launch(CardDefinition card)
     {
+        if (card.Type == CardType.Workspace)
+        {
+            LaunchWorkspace(card);
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(card.Target))
             throw new LaunchException($"The card \"{card.Title}\" has no target set in cards.json.");
 
@@ -33,6 +39,54 @@ public static class Launcher
         {
             throw new LaunchException($"Couldn't open \"{card.Title}\" ({card.Target}): {ex.Message}");
         }
+    }
+
+    /// <summary>Opens every item, then reports all failures together.</summary>
+    private static void LaunchWorkspace(CardDefinition card)
+    {
+        var items = card.Items ?? new List<WorkspaceItem>();
+        if (items.Count == 0)
+            throw new LaunchException($"The workspace \"{card.Title}\" is empty. Click Edit on the launchpad to add things to it.");
+
+        var failures = new List<string>();
+        foreach (var item in items)
+        {
+            try
+            {
+                Launch(new CardDefinition
+                {
+                    Title = item.Target,
+                    Type = item.Type == CardType.Website ? CardType.Website : CardType.Program,
+                    Target = item.Target,
+                    Arguments = item.Arguments,
+                    Browser = item.Browser,
+                });
+            }
+            catch (LaunchException ex)
+            {
+                failures.Add(ex.Message);
+            }
+        }
+
+        if (failures.Count > 0)
+            throw new LaunchException($"Some items in \"{card.Title}\" didn't open:\n\n" + string.Join("\n\n", failures));
+    }
+
+    /// <summary>
+    /// Guesses whether something typed is a website or a program/file/folder.
+    /// Paths, existing files and .exe/.lnk names are programs; addresses are websites.
+    /// </summary>
+    public static CardType GuessType(string target)
+    {
+        var t = target.Trim();
+        if (t.Contains("://", StringComparison.Ordinal) || t.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+            return CardType.Website;
+        if (Path.IsPathRooted(t) || t.Contains('\\') || t.Contains('%') || File.Exists(t) || Directory.Exists(t))
+            return CardType.Program;
+        var ext = Path.GetExtension(t).ToLowerInvariant();
+        if (ext is ".exe" or ".lnk" or ".bat" or ".cmd" or ".msc" or ".url")
+            return CardType.Program;
+        return t.Contains('.') && !t.Contains(' ') ? CardType.Website : CardType.Program;
     }
 
     private static void StartProgram(CardDefinition card)

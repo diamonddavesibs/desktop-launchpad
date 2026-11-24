@@ -55,7 +55,9 @@ public sealed class CardView : Border
         BorderBrush = BorderColor;
         BorderThickness = new Thickness(1);
         Cursor = Cursors.Hand;
-        ToolTip = card.Target;
+        ToolTip = card.Type == CardType.Workspace
+            ? string.Join("\n", card.Items?.Select(i => i.Target) ?? Enumerable.Empty<string>())
+            : card.Target;
         RenderTransformOrigin = new Point(0.5, 0.5);
         RenderTransform = new ScaleTransform(1, 1);
 
@@ -63,7 +65,7 @@ public sealed class CardView : Border
         content.Children.Add(BuildIcon(card));
         content.Children.Add(new TextBlock
         {
-            Text = string.IsNullOrWhiteSpace(card.Title) ? card.Target : card.Title,
+            Text = string.IsNullOrWhiteSpace(card.Title) ? (card.Type == CardType.Workspace ? "Workspace" : card.Target) : card.Title,
             FontSize = 17,
             FontWeight = FontWeights.SemiBold,
             Foreground = Brushes.White,
@@ -290,6 +292,11 @@ public sealed class CardView : Border
 
     private static string Describe(CardDefinition card)
     {
+        if (card.Type == CardType.Workspace)
+        {
+            var count = card.Items?.Count ?? 0;
+            return count == 1 ? "Opens 1 thing" : $"Opens {count} things";
+        }
         if (card.Type == CardType.Website)
         {
             var host = Uri.TryCreate(Launcher.NormalizeUrl(card.Target), UriKind.Absolute, out var uri)

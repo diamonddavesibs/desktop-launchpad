@@ -42,6 +42,7 @@
         <StackPanel Orientation="Horizontal">
             <RadioButton x:Name="ProgramRadio" Content="A program, file or folder" GroupName="Type" Checked="Type_Changed" />
             <RadioButton x:Name="WebsiteRadio" Content="A website" GroupName="Type" Checked="Type_Changed" />
+            <RadioButton x:Name="WorkspaceRadio" Content="Several at once" GroupName="Type" Checked="Type_Changed" />
         </StackPanel>
 
         <TextBlock x:Name="TargetLabel" Style="{StaticResource Label}" Text="Program" />
@@ -51,11 +52,22 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="TargetBox" Grid.Column="0" />
+            <TextBox x:Name="TargetBox" Grid.Column="0" PreviewKeyDown="TargetBox_PreviewKeyDown" />
             <Button x:Name="BrowseFileButton" Grid.Column="1" Content="File…" Margin="8,0,0,0" MinWidth="0" Click="BrowseFile_Click" />
             <Button x:Name="BrowseFolderButton" Grid.Column="2" Content="Folder…" Margin="6,0,0,0" MinWidth="0" Click="BrowseFolder_Click" />
         </Grid>
         <TextBlock x:Name="TargetHint" FontSize="12" Foreground="#80909C" Margin="0,4,0,0" TextWrapping="Wrap" />
+
+        <StackPanel x:Name="WorkspacePanel" Visibility="Collapsed">
+            <Button Content="Add to workspace" HorizontalAlignment="Left" Margin="0,8,0,0" Click="AddItem_Click" />
+            <TextBlock Style="{StaticResource Label}" Text="This workspace opens" />
+            <ListBox x:Name="ItemsList" Height="150" Background="#0F1317" Foreground="White" BorderBrush="#3A444F" />
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <Button Content="Move up" MinWidth="0" Click="MoveUp_Click" />
+                <Button Content="Move down" MinWidth="0" Margin="6,0,0,0" Click="MoveDown_Click" />
+                <Button Content="Remove" MinWidth="0" Margin="6,0,0,0" Click="RemoveItem_Click" />
+            </StackPanel>
+        </StackPanel>
 
         <StackPanel x:Name="ArgumentsPanel">
             <TextBlock Style="{StaticResource Label}" Text="Arguments (optional)" />
@@ -63,7 +75,7 @@
         </StackPanel>
 
         <StackPanel x:Name="BrowserPanel">
-            <TextBlock Style="{StaticResource Label}" Text="Open in" />
+            <TextBlock x:Name="BrowserLabel" Style="{StaticResource Label}" Text="Open in" />
             <ComboBox x:Name="BrowserCombo" SelectionChanged="BrowserCombo_SelectionChanged" />
         </StackPanel>
 

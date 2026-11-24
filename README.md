@@ -25,6 +25,8 @@ Open the launchpad and click **Edit** in the top-right corner:
 
 - **+ Add card** opens a form. Pick a program, file or folder with **File…** or **Folder…**,
   or type a web address and choose which browser opens it.
+- Choose **Several at once** in the form to make a workspace card: one click opens a whole
+  list of programs, folders and websites, for example everything you need to start work.
 - Drag a card to move it. Drag the yellow dot in its corner to resize it.
 - Click a card (or its pencil) to change it, or the bin to delete it.
 - Click **Done** or press **Esc** when finished. Changes are saved as you go.
@@ -42,7 +44,12 @@ Cards are saved in `%AppData%\DesktopLaunchpad\cards.json` (the previous version
   "cards": [
     { "title": "Notepad", "type": "program", "target": "notepad.exe" },
     { "title": "My project", "type": "program", "target": "C:\\Users\\Me\\Documents\\Project" },
-    { "title": "Gmail", "type": "website", "target": "https://mail.google.com", "browser": "chrome", "color": "#2563EB" }
+    { "title": "Gmail", "type": "website", "target": "https://mail.google.com", "browser": "chrome", "color": "#2563EB" },
+    { "title": "Start work", "type": "workspace", "items": [
+        { "type": "website", "target": "https://mail.google.com", "browser": "chrome" },
+        { "type": "website", "target": "https://calendar.google.com", "browser": "chrome" },
+        { "type": "program", "target": "C:\\Users\\Me\\Documents\\Project" }
+    ] }
   ]
 }
 ```
@@ -50,11 +57,12 @@ Cards are saved in `%AppData%\DesktopLaunchpad\cards.json` (the previous version
 | Field | What it means |
 | --- | --- |
 | `title` | Text on the card |
-| `type` | `program` or `website` |
+| `type` | `program`, `website` or `workspace` |
 | `target` | Programs: an .exe name, full path, shortcut, file or folder. Websites: the address |
 | `arguments` | Optional, programs only: command-line arguments |
 | `browser` | Optional, websites only: `default`, `chrome`, `edge`, `firefox`, `brave`, `opera`, `vivaldi`, or the full path to a browser .exe |
 | `color` | Optional card color, such as `#2563EB` |
+| `items` | Workspaces only: a list of things to open, each with its own `type` (`program` or `website`), `target`, and optional `arguments` or `browser` |
 | `x`, `y`, `width`, `height` | Optional position and size. Leave them out and the card is placed automatically |
 
 In JSON, backslashes in paths are written twice: `C:\\Program Files\\...`.
