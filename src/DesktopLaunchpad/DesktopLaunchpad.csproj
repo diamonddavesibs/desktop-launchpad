@@ -12,6 +12,8 @@
     <AssemblyName>DesktopLaunchpad</AssemblyName>
     <!-- Lets the project compile on non-Windows build machines (CI). -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- The release workflow overrides this with the number typed when publishing a release. -->
+    <Version>1.0.0</Version>
     <ApplicationIcon>Assets\launchpad.ico</ApplicationIcon>
   </PropertyGroup>
 

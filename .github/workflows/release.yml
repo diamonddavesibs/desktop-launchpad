@@ -1,0 +1,44 @@
+name: Release
+
+# Run by hand: Actions tab > Release > Run workflow, then type a version such as 1.0.0.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number, such as 1.0.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Check version number
+        shell: pwsh
+        run: |
+          if ("${{ inputs.version }}" -notmatch '^\d+\.\d+\.\d+$') { throw "Version must look like 1.2.3" }
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install Inno Setup if missing
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+
+      - name: Build installer
+        shell: pwsh
+        run: installer\build-installer.ps1 -Version "${{ inputs.version }}"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: Desktop Launchpad ${{ inputs.version }}
+          files: artifacts/installer/*.exe
+          generate_release_notes: true

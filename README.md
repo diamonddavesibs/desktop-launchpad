@@ -5,7 +5,34 @@ Each card opens a program on your PC or a website in the browser you choose.
 
 Built with C#, .NET 8 and WPF.
 
-## Run it
+## Install it
+
+1. Open the [Releases page](https://github.com/diamonddavesibs/desktop-launchpad/releases) and download
+   `DesktopLaunchpad-Setup-<version>.exe` from the newest release.
+2. Run it. Windows SmartScreen may say it "protected your PC" because the installer isn't signed:
+   click **More info**, then **Run anyway**.
+3. Click through the setup. It installs just for you (no administrator prompt) into
+   `%LocalAppData%\Programs\Desktop Launchpad`, adds a Start menu shortcut, and can start the
+   launchpad when you sign in.
+
+To update, run the newer installer over the top. To remove it, use **Settings > Apps > Installed apps >
+Desktop Launchpad > Uninstall**. Your cards in `%AppData%\DesktopLaunchpad` are kept either way.
+
+### Publishing a new release
+
+1. On GitHub, open the **Actions** tab and pick **Release** on the left.
+2. Click **Run workflow**, type a version number such as `1.0.1` (bigger than the last one), and click
+   **Run workflow**.
+3. After a few minutes the new installer appears on the Releases page.
+
+Every pull request also builds an installer you can try first: open the PR's **Checks** tab, click
+**Build**, then **Summary**, and download **DesktopLaunchpad-Setup** at the bottom.
+
+To build the installer on your own PC, install [Inno Setup 6](https://jrsoftware.org/isdl.php) and run
+`powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1` from the repo folder.
+The installer lands in `artifacts\installer`.
+
+## Run it from the code
 
 1. Install [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) with the
    **.NET desktop development** workload.
@@ -80,3 +107,6 @@ In JSON, backslashes in paths are written twice: `C:\\Program Files\\...`.
 | `Cards/CardView.cs` | Draws each card and handles click, drag and resize |
 | `CardEditorWindow.xaml` | The form for adding and changing a card |
 | `StartupManager.cs` | The Start with Windows setting |
+| `installer/DesktopLaunchpad.iss` | The Inno Setup script that makes the installer |
+| `installer/build-installer.ps1` | Publishes the app and builds the installer |
+| `.github/workflows/release.yml` | Builds the installer and publishes it as a GitHub release |

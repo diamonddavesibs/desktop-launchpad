@@ -14,3 +14,18 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - run: dotnet build DesktopLaunchpad.sln -c Release
+
+      - name: Install Inno Setup if missing
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+
+      - name: Build installer
+        shell: pwsh
+        run: installer\build-installer.ps1 -Version "0.0.${{ github.run_number }}"
+
+      # Download it from the run's Summary page to try it before a release.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DesktopLaunchpad-Setup
+          path: artifacts/installer/*.exe
