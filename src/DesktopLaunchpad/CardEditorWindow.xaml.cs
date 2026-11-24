@@ -32,6 +32,7 @@ public partial class CardEditorWindow : Window
     };
 
     private readonly CardDefinition _card;
+    private readonly List<WorkspaceItem> _items;
     private string? _color;
     private bool _ignoreBrowserChange;
 
@@ -42,35 +43,120 @@ public partial class CardEditorWindow : Window
         InitializeComponent();
         Title = existing is null ? "Add card" : "Edit card";
         _card = existing?.Clone() ?? new CardDefinition { Type = CardType.Program };
+        _items = _card.Items ?? new List<WorkspaceItem>();
 
         TitleBox.Text = _card.Title;
-        TargetBox.Text = _card.Target;
+        TargetBox.Text = _card.Type == CardType.Workspace ? "" : _card.Target;
         ArgumentsBox.Text = _card.Arguments ?? "";
         _color = _card.Color;
 
         FillBrowsers(_card.Browser);
         BuildSwatches();
 
+        RefreshItems();
         if (_card.Type == CardType.Website) WebsiteRadio.IsChecked = true;
+        else if (_card.Type == CardType.Workspace) WorkspaceRadio.IsChecked = true;
         else ProgramRadio.IsChecked = true;
 
         Loaded += (_, _) => { TitleBox.Focus(); TitleBox.SelectAll(); };
     }
 
     private bool IsWebsite => WebsiteRadio.IsChecked == true;
+    private bool IsWorkspace => WorkspaceRadio.IsChecked == true;
 
     private void Type_Changed(object sender, RoutedEventArgs e)
     {
-        if (TargetLabel is null) return; // still loading
+        if (TargetLabel is null || WorkspacePanel is null) return; // still loading
         var web = IsWebsite;
-        TargetLabel.Text = web ? "Web address" : "Program, file or folder";
-        TargetHint.Text = web
-            ? "For example https://mail.google.com"
-            : "Browse to a program or shortcut, or type a name like notepad.exe.";
+        var workspace = IsWorkspace;
+
+        TargetLabel.Text = workspace ? "Add a program, folder or website" : web ? "Web address" : "Program, file or folder";
+        TargetHint.Text = workspace
+            ? "Browse, or type an address or program name and press Enter. Websites open in the browser chosen below."
+            : web
+                ? "For example https://mail.google.com"
+                : "Browse to a program or shortcut, or type a name like notepad.exe.";
         BrowseFileButton.Visibility = web ? Visibility.Collapsed : Visibility.Visible;
         BrowseFolderButton.Visibility = web ? Visibility.Collapsed : Visibility.Visible;
-        ArgumentsPanel.Visibility = web ? Visibility.Collapsed : Visibility.Visible;
-        BrowserPanel.Visibility = web ? Visibility.Visible : Visibility.Collapsed;
+        ArgumentsPanel.Visibility = web || workspace ? Visibility.Collapsed : Visibility.Visible;
+        BrowserPanel.Visibility = web || workspace ? Visibility.Visible : Visibility.Collapsed;
+        BrowserLabel.Text = workspace ? "Open websites in" : "Open in";
+        WorkspacePanel.Visibility = workspace ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // ----- Workspace list -----
+
+    private string SelectedBrowser => (BrowserCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "default";
+
+    private void AddItem(string target)
+    {
+        target = target.Trim();
+        if (target.Length == 0) return;
+
+        var type = Launcher.GuessType(target);
+        _items.Add(new WorkspaceItem
+        {
+            Type = type,
+            Target = type == CardType.Website ? Launcher.NormalizeUrl(target) : target,
+            Browser = type == CardType.Website ? SelectedBrowser : null,
+        });
+        TargetBox.Clear();
+        ErrorText.Visibility = Visibility.Collapsed;
+        RefreshItems();
+        ItemsList.SelectedIndex = _items.Count - 1;
+    }
+
+    private void RefreshItems()
+    {
+        var selected = ItemsList.SelectedIndex;
+        ItemsList.Items.Clear();
+        foreach (var item in _items)
+            ItemsList.Items.Add(Describe(item));
+        ItemsList.SelectedIndex = Math.Min(selected, _items.Count - 1);
+    }
+
+    private static string Describe(WorkspaceItem item)
+    {
+        if (item.Type == CardType.Website)
+        {
+            var browser = string.IsNullOrWhiteSpace(item.Browser) || item.Browser == "default"
+                ? "default browser"
+                : Path.GetFileNameWithoutExtension(item.Browser);
+            return $"Website   {item.Target}   ({browser})";
+        }
+        return $"Program   {item.Target}";
+    }
+
+    private void AddItem_Click(object sender, RoutedEventArgs e) => AddItem(TargetBox.Text);
+
+    private void TargetBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (IsWorkspace && e.Key == System.Windows.Input.Key.Enter)
+        {
+            AddItem(TargetBox.Text);
+            e.Handled = true; // don't trigger Save
+        }
+    }
+
+    private void MoveUp_Click(object sender, RoutedEventArgs e) => MoveSelected(-1);
+    private void MoveDown_Click(object sender, RoutedEventArgs e) => MoveSelected(+1);
+
+    private void MoveSelected(int offset)
+    {
+        var index = ItemsList.SelectedIndex;
+        var target = index + offset;
+        if (index < 0 || target < 0 || target >= _items.Count) return;
+        (_items[index], _items[target]) = (_items[target], _items[index]);
+        RefreshItems();
+        ItemsList.SelectedIndex = target;
+    }
+
+    private void RemoveItem_Click(object sender, RoutedEventArgs e)
+    {
+        var index = ItemsList.SelectedIndex;
+        if (index < 0) return;
+        _items.RemoveAt(index);
+        RefreshItems();
     }
 
     private void BrowseFile_Click(object sender, RoutedEventArgs e)
@@ -84,6 +170,7 @@ public partial class CardEditorWindow : Window
         };
         if (dialog.ShowDialog(this) != true) return;
 
+        if (IsWorkspace) { AddItem(dialog.FileName); return; }
         TargetBox.Text = dialog.FileName;
         if (string.IsNullOrWhiteSpace(TitleBox.Text))
             TitleBox.Text = Path.GetFileNameWithoutExtension(dialog.FileName);
@@ -94,6 +181,7 @@ public partial class CardEditorWindow : Window
         var dialog = new OpenFolderDialog { Title = "Choose a folder" };
         if (dialog.ShowDialog(this) != true) return;
 
+        if (IsWorkspace) { AddItem(dialog.FolderName); return; }
         TargetBox.Text = dialog.FolderName;
         if (string.IsNullOrWhiteSpace(TitleBox.Text))
             TitleBox.Text = Path.GetFileName(dialog.FolderName.TrimEnd('\\'));
@@ -202,6 +290,12 @@ public partial class CardEditorWindow : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
+        if (IsWorkspace)
+        {
+            SaveWorkspace();
+            return;
+        }
+
         var target = TargetBox.Text.Trim();
         if (target.Length == 0)
         {
@@ -215,6 +309,31 @@ public partial class CardEditorWindow : Window
         _card.Title = TitleBox.Text.Trim().Length > 0 ? TitleBox.Text.Trim() : DefaultTitle(_card);
         _card.Arguments = IsWebsite || string.IsNullOrWhiteSpace(ArgumentsBox.Text) ? null : ArgumentsBox.Text.Trim();
         _card.Browser = IsWebsite ? (BrowserCombo.SelectedItem as ComboBoxItem)?.Tag as string ?? "default" : null;
+        _card.Color = _color;
+        _card.Items = null;
+
+        Result = _card;
+        DialogResult = true;
+    }
+
+    private void SaveWorkspace()
+    {
+        // Something typed but not added yet is almost certainly meant to be in the list.
+        if (TargetBox.Text.Trim().Length > 0) AddItem(TargetBox.Text);
+
+        if (_items.Count == 0)
+        {
+            ShowError("Add at least one program, folder or website to the workspace.");
+            TargetBox.Focus();
+            return;
+        }
+
+        _card.Type = CardType.Workspace;
+        _card.Title = TitleBox.Text.Trim().Length > 0 ? TitleBox.Text.Trim() : "Workspace";
+        _card.Target = "";
+        _card.Arguments = null;
+        _card.Browser = null;
+        _card.Items = _items;
         _card.Color = _color;
 
         Result = _card;

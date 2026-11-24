@@ -9,6 +9,21 @@ public enum CardType
 
     /// <summary>Opens a web address in a browser.</summary>
     Website,
+
+    /// <summary>Opens several programs, folders and websites at once.</summary>
+    Workspace,
+}
+
+/// <summary>One thing a workspace card opens.</summary>
+public sealed class WorkspaceItem
+{
+    /// <summary>Program or Website.</summary>
+    public CardType Type { get; set; } = CardType.Program;
+    public string Target { get; set; } = "";
+    public string? Arguments { get; set; }
+    public string? Browser { get; set; }
+
+    public WorkspaceItem Clone() => (WorkspaceItem)MemberwiseClone();
 }
 
 /// <summary>One card on the launchpad, as stored in cards.json.</summary>
@@ -24,6 +39,9 @@ public sealed class CardDefinition
     /// a file or a folder. For a website: the address, such as https://github.com.
     /// </summary>
     public string Target { get; set; } = "";
+
+    /// <summary>Workspace cards only: everything the card opens, in order.</summary>
+    public List<WorkspaceItem>? Items { get; set; }
 
     /// <summary>Optional command-line arguments for a program card.</summary>
     public string? Arguments { get; set; }
@@ -43,7 +61,12 @@ public sealed class CardDefinition
     public double? Width { get; set; }
     public double? Height { get; set; }
 
-    public CardDefinition Clone() => (CardDefinition)MemberwiseClone();
+    public CardDefinition Clone()
+    {
+        var copy = (CardDefinition)MemberwiseClone();
+        copy.Items = Items?.Select(i => i.Clone()).ToList();
+        return copy;
+    }
 }
 
 public sealed class CardFile
