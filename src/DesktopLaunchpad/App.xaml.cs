@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Windows;
+using DesktopLaunchpad.Cards;
 using System.Windows.Input;
 
 namespace DesktopLaunchpad;
@@ -31,7 +33,7 @@ public partial class App : Application
         }
 
         _launchpad = new LaunchpadWindow();
-        _tray = new TrayIcon(onOpen: ShowLaunchpad, onExit: ExitApp);
+        _tray = new TrayIcon(onOpen: ShowLaunchpad, onEditCards: EditCards, onExit: ExitApp);
 
         _hotkey = new HotkeyManager();
         _hotkey.Pressed += (_, _) => ToggleLaunchpad();
@@ -54,6 +56,21 @@ public partial class App : Application
     }
 
     private void ShowLaunchpad() => _launchpad?.ShowLaunchpad();
+
+    /// <summary>Opens cards.json in Notepad. Changes show up the next time the launchpad opens.</summary>
+    private static void EditCards()
+    {
+        try
+        {
+            CardStore.EnsureFileExists();
+            Process.Start(new ProcessStartInfo("notepad.exe") { ArgumentList = { CardStore.FilePath } });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Couldn't open {CardStore.FilePath}: {ex.Message}", "Desktop Launchpad",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
 
     private void ExitApp()
     {

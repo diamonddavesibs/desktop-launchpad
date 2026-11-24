@@ -23,20 +23,13 @@
             <TextBlock x:Name="ClockText" FontSize="16" Foreground="#B0BAC5" Margin="0,4,0,0" />
         </StackPanel>
 
-        <!-- Cards go here. Step 2 fills this canvas from the settings file. -->
-        <Canvas x:Name="CardCanvas" Grid.Row="1" Margin="48,24,48,24" Background="Transparent">
-            <Border Canvas.Left="0" Canvas.Top="0" Width="320" Padding="20"
-                    CornerRadius="14" Background="#26FFFFFF" BorderBrush="#40FFFFFF" BorderThickness="1"
-                    MouseLeftButtonDown="Card_MouseLeftButtonDown">
-                <StackPanel>
-                    <TextBlock Text="No cards yet" FontSize="18" FontWeight="SemiBold" Foreground="White" />
-                    <TextBlock TextWrapping="Wrap" Foreground="#C8D0D8" Margin="0,6,0,0"
-                               Text="Program and website cards arrive in the next step." />
-                </StackPanel>
-            </Border>
-        </Canvas>
+        <!-- Cards are added from cards.json each time the launchpad opens. -->
+        <ScrollViewer x:Name="CardScroller" Grid.Row="1" Margin="40,16,40,16"
+                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <WrapPanel x:Name="CardPanel" Background="Transparent" />
+        </ScrollViewer>
 
         <TextBlock Grid.Row="2" Margin="48,0,48,24" Foreground="#80909C" FontSize="13"
-                   Text="Esc or click empty space to close  ·  Ctrl+Space to toggle" />
+                   Text="Click a card to open it  ·  Esc or click empty space to close  ·  Edit cards from the tray icon menu" />
     </Grid>
 </Window>

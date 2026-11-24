@@ -3,17 +3,18 @@ using Forms = System.Windows.Forms;
 namespace DesktopLaunchpad;
 
 /// <summary>
-/// The icon in the Windows notification area, with Open and Exit menu items.
+/// The icon in the Windows notification area, with Open, Edit cards and Exit menu items.
 /// Double-clicking the icon opens the launchpad.
 /// </summary>
 public sealed class TrayIcon : IDisposable
 {
     private readonly Forms.NotifyIcon _icon;
 
-    public TrayIcon(Action onOpen, Action onExit)
+    public TrayIcon(Action onOpen, Action onEditCards, Action onExit)
     {
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add("Open launchpad (Ctrl+Space)", null, (_, _) => onOpen());
+        menu.Items.Add("Edit cards…", null, (_, _) => onEditCards());
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => onExit());
 
