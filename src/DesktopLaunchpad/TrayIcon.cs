@@ -29,6 +29,8 @@ public sealed class TrayIcon : IDisposable
         };
         menu.Items.Add(startWithWindows);
         menu.Items.Add(new Forms.ToolStripSeparator());
+        var version = typeof(TrayIcon).Assembly.GetName().Version;
+        menu.Items.Add(new Forms.ToolStripMenuItem($"Version {version?.ToString(3)}") { Enabled = false });
         menu.Items.Add("Exit", null, (_, _) => onExit());
 
         _icon = new Forms.NotifyIcon
