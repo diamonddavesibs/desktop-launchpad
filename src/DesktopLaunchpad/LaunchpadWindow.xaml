@@ -10,6 +10,37 @@
         Topmost="True"
         Opacity="0">
 
+    <Window.Resources>
+        <Style x:Key="HeaderButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="#26FFFFFF" />
+            <Setter Property="BorderBrush" Value="#40FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="Margin" Value="10,0,0,0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="BorderBrush" Value="#C0FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <!-- Dimmed backdrop over the whole screen. Clicking empty space closes the launchpad. -->
     <Grid x:Name="Backdrop" Background="#CC101418" MouseLeftButtonDown="Backdrop_MouseLeftButtonDown">
         <Grid.RowDefinitions>
@@ -18,18 +49,24 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="48,40,48,0">
-            <TextBlock Text="Launchpad" FontSize="36" FontWeight="SemiBold" Foreground="White" />
-            <TextBlock x:Name="ClockText" FontSize="16" Foreground="#B0BAC5" Margin="0,4,0,0" />
-        </StackPanel>
+        <Grid Grid.Row="0" Margin="48,40,48,0">
+            <StackPanel>
+                <TextBlock Text="Launchpad" FontSize="36" FontWeight="SemiBold" Foreground="White" />
+                <TextBlock x:Name="ClockText" FontSize="16" Foreground="#B0BAC5" Margin="0,4,0,0" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button x:Name="AddButton" Style="{StaticResource HeaderButton}" Content="+  Add card"
+                        Visibility="Collapsed" Click="AddButton_Click" />
+                <Button x:Name="EditButton" Style="{StaticResource HeaderButton}" Content="Edit" Click="EditButton_Click" />
+            </StackPanel>
+        </Grid>
 
-        <!-- Cards are added from cards.json each time the launchpad opens. -->
-        <ScrollViewer x:Name="CardScroller" Grid.Row="1" Margin="40,16,40,16"
-                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <WrapPanel x:Name="CardPanel" Background="Transparent" />
+        <!-- Cards are placed on this canvas at their saved positions. -->
+        <ScrollViewer x:Name="CardScroller" Grid.Row="1" Margin="48,24,48,16"
+                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Canvas x:Name="CardCanvas" HorizontalAlignment="Left" VerticalAlignment="Top" />
         </ScrollViewer>
 
-        <TextBlock Grid.Row="2" Margin="48,0,48,24" Foreground="#80909C" FontSize="13"
-                   Text="Click a card to open it  ·  Esc or click empty space to close  ·  Edit cards from the tray icon menu" />
+        <TextBlock x:Name="FooterText" Grid.Row="2" Margin="48,0,48,24" Foreground="#80909C" FontSize="13" />
     </Grid>
 </Window>

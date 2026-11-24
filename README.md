@@ -21,8 +21,21 @@ The app starts in the background. Look for its icon in the system tray, near the
 
 ## Your cards
 
-Cards live in `%AppData%\DesktopLaunchpad\cards.json`. Right-click the tray icon and
-choose **Edit cards…** to open it in Notepad. Save, then reopen the launchpad to see changes.
+Open the launchpad and click **Edit** in the top-right corner:
+
+- **+ Add card** opens a form. Pick a program, file or folder with **File…** or **Folder…**,
+  or type a web address and choose which browser opens it.
+- Drag a card to move it. Drag the yellow dot in its corner to resize it.
+- Click a card (or its pencil) to change it, or the bin to delete it.
+- Click **Done** or press **Esc** when finished. Changes are saved as you go.
+
+Right-click the tray icon and tick **Start with Windows** to have the launchpad ready after every restart.
+
+### The cards file
+
+Cards are saved in `%AppData%\DesktopLaunchpad\cards.json` (the previous version is kept as
+`cards.json.bak`). You can also edit it by hand: right-click the tray icon and choose
+**Edit cards file (advanced)…**, save, then reopen the launchpad.
 
 ```json
 {
@@ -42,6 +55,7 @@ choose **Edit cards…** to open it in Notepad. Save, then reopen the launchpad 
 | `arguments` | Optional, programs only: command-line arguments |
 | `browser` | Optional, websites only: `default`, `chrome`, `edge`, `firefox`, `brave`, `opera`, `vivaldi`, or the full path to a browser .exe |
 | `color` | Optional card color, such as `#2563EB` |
+| `x`, `y`, `width`, `height` | Optional position and size. Leave them out and the card is placed automatically |
 
 In JSON, backslashes in paths are written twice: `C:\\Program Files\\...`.
 
@@ -55,4 +69,6 @@ In JSON, backslashes in paths are written twice: `C:\\Program Files\\...`.
 | `LaunchpadWindow.xaml` | The full-screen dashboard that shows the cards |
 | `Cards/CardStore.cs` | Reads `cards.json` and writes the starter cards on first run |
 | `Cards/Launcher.cs` | Opens programs and websites, finds installed browsers |
-| `Cards/CardViewFactory.cs` | Draws each card |
+| `Cards/CardView.cs` | Draws each card and handles click, drag and resize |
+| `CardEditorWindow.xaml` | The form for adding and changing a card |
+| `StartupManager.cs` | The Start with Windows setting |
