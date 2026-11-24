@@ -36,6 +36,14 @@ public sealed class CardDefinition
 
     /// <summary>Optional card background, such as "#2563EB".</summary>
     public string? Color { get; set; }
+
+    /// <summary>Position and size on the launchpad. Left empty, the card is placed automatically.</summary>
+    public double? X { get; set; }
+    public double? Y { get; set; }
+    public double? Width { get; set; }
+    public double? Height { get; set; }
+
+    public CardDefinition Clone() => (CardDefinition)MemberwiseClone();
 }
 
 public sealed class CardFile

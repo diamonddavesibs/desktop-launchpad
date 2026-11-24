@@ -3,7 +3,7 @@ using Forms = System.Windows.Forms;
 namespace DesktopLaunchpad;
 
 /// <summary>
-/// The icon in the Windows notification area, with Open, Edit cards and Exit menu items.
+/// The icon in the Windows notification area, with Open, Edit cards file, Start with Windows and Exit menu items.
 /// Double-clicking the icon opens the launchpad.
 /// </summary>
 public sealed class TrayIcon : IDisposable
@@ -14,7 +14,20 @@ public sealed class TrayIcon : IDisposable
     {
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add("Open launchpad (Ctrl+Space)", null, (_, _) => onOpen());
-        menu.Items.Add("Edit cards…", null, (_, _) => onEditCards());
+        menu.Items.Add("Edit cards file (advanced)…", null, (_, _) => onEditCards());
+
+        var startWithWindows = new Forms.ToolStripMenuItem("Start with Windows") { CheckOnClick = true };
+        menu.Opening += (_, _) => startWithWindows.Checked = StartupManager.IsEnabled;
+        startWithWindows.Click += (_, _) =>
+        {
+            try { StartupManager.SetEnabled(startWithWindows.Checked); }
+            catch (Exception ex)
+            {
+                startWithWindows.Checked = StartupManager.IsEnabled;
+                ShowWarning("Couldn't change startup setting", ex.Message);
+            }
+        };
+        menu.Items.Add(startWithWindows);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => onExit());
 

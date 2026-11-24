@@ -50,6 +50,21 @@ public static class CardStore
         }
     }
 
+    /// <summary>Writes the cards back to cards.json, keeping a backup of the previous file.</summary>
+    public static void Save(IEnumerable<CardDefinition> cards)
+    {
+        Directory.CreateDirectory(FolderPath);
+        var file = new CardFile { Help = HelpText, Cards = cards.ToList() };
+        var json = JsonSerializer.Serialize(file, Options);
+
+        var temp = FilePath + ".tmp";
+        File.WriteAllText(temp, json);
+        if (File.Exists(FilePath))
+            File.Replace(temp, FilePath, FilePath + ".bak");
+        else
+            File.Move(temp, FilePath);
+    }
+
     public static void EnsureFileExists()
     {
         if (File.Exists(FilePath)) return;
@@ -57,11 +72,14 @@ public static class CardStore
         File.WriteAllText(FilePath, JsonSerializer.Serialize(StarterCards(), Options));
     }
 
+    private const string HelpText =
+        "Easiest: open the launchpad and click Edit. To edit by hand: each card needs a title, a type (program or website) and a target. " +
+        "Website cards can set browser to default, chrome, edge, firefox, brave, opera, vivaldi or a path to a browser .exe. " +
+        "Optional: arguments (programs), color such as #2563EB, and x/y/width/height for position. Save, then reopen the launchpad.";
+
     private static CardFile StarterCards() => new()
     {
-        Help = "Each card needs a title, a type (program or website) and a target. " +
-               "Website cards can set browser to default, chrome, edge, firefox, brave, opera, vivaldi or a path to a browser .exe. " +
-               "Optional: arguments (programs), color such as #2563EB. Save this file, then reopen the launchpad.",
+        Help = HelpText,
         Cards =
         {
             new() { Title = "File Explorer", Type = CardType.Program, Target = "explorer.exe" },
