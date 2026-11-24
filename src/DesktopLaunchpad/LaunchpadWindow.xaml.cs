@@ -1,4 +1,6 @@
+using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -51,12 +53,12 @@ public partial class LaunchpadWindow : Window
         if (IsVisible && !_isHiding) { Activate(); return; }
         _isHiding = false;
 
-        MoveToMonitorUnderMouse();
         UpdateClock();
         _clock.Start();
 
+        CoverMonitorUnderMouse();
         Show();
-        WindowState = WindowState.Maximized;
+        CoverMonitorUnderMouse(); // again, in case showing it moved it to a monitor with a different scale
         UpdateLayout(); // so the card area has its real size before placing cards
         LoadCards();
         Activate();
@@ -83,21 +85,24 @@ public partial class LaunchpadWindow : Window
     }
 
     /// <summary>
-    /// Places the (un-maximized) window on the monitor under the mouse so that
-    /// maximizing fills that monitor.
+    /// Sizes the window to exactly cover the monitor under the mouse. This is done in
+    /// physical pixels with SetWindowPos rather than by maximizing: a window hidden
+    /// while maximized can come back at its small "restored" size instead.
     /// </summary>
-    private void MoveToMonitorUnderMouse()
+    private void CoverMonitorUnderMouse()
     {
         WindowState = WindowState.Normal;
-        var screen = Forms.Screen.FromPoint(Forms.Cursor.Position).WorkingArea;
-
-        // Screen coordinates are in physical pixels; WPF uses 96-DPI units.
-        var dpi = VisualTreeHelper.GetDpi(this);
-        Left = (screen.Left + 10) / dpi.DpiScaleX;
-        Top = (screen.Top + 10) / dpi.DpiScaleY;
-        Width = 400;
-        Height = 300;
+        var bounds = Forms.Screen.FromPoint(Forms.Cursor.Position).Bounds;
+        var hwnd = new WindowInteropHelper(this).EnsureHandle();
+        SetWindowPos(hwnd, IntPtr.Zero, bounds.Left, bounds.Top, bounds.Width, bounds.Height,
+            SwpNoZOrder | SwpNoActivate);
     }
+
+    private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
 
     // ----- Cards -----
 
