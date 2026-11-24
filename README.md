@@ -94,6 +94,16 @@ Cards are saved in `%AppData%\DesktopLaunchpad\cards.json` (the previous version
 
 In JSON, backslashes in paths are written twice: `C:\\Program Files\\...`.
 
+## Themes
+
+Click **Theme** at the top of the launchpad to change its look. You can pick one of six looks
+(Midnight, Light, Ocean, Forest, Sunset, Graphite), a highlight color, a background picture,
+how solid the backdrop is, and the card shape. Changes show on the launchpad as you pick them;
+Save keeps them and Cancel puts the old look back. Cards you gave their own color keep it, and
+their text switches between light and dark so it stays readable.
+
+The choice is saved in `%AppData%\DesktopLaunchpad\settings.json`.
+
 ## Project layout
 
 | File | What it does |
@@ -106,6 +116,9 @@ In JSON, backslashes in paths are written twice: `C:\\Program Files\\...`.
 | `Cards/Launcher.cs` | Opens programs and websites, finds installed browsers |
 | `Cards/CardView.cs` | Draws each card and handles click, drag and resize |
 | `CardEditorWindow.xaml` | The form for adding and changing a card |
+| `ThemeWindow.xaml` | The Theme picker |
+| `Themes/Theme.cs` | The built-in looks, and turns the chosen look into colors |
+| `Themes/ThemeSettings.cs` | Reads and writes the chosen look in `settings.json` |
 | `StartupManager.cs` | The Start with Windows setting |
 | `installer/DesktopLaunchpad.iss` | The Inno Setup script that makes the installer |
 | `installer/build-installer.ps1` | Publishes the app and builds the installer |

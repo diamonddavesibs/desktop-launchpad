@@ -265,7 +265,7 @@ public partial class CardEditorWindow : Window
                 MinWidth = 0,
                 Padding = new Thickness(0),
                 Margin = new Thickness(0, 0, 8, 8),
-                ToolTip = hex ?? "Default (see-through)",
+                ToolTip = hex ?? "Default (follows the theme)",
                 Background = CardView.ParseBrush(hex) ?? CardView.DefaultBackground,
                 BorderBrush = selected ? Brushes.White : new SolidColorBrush(Color.FromRgb(0x3A, 0x44, 0x4F)),
                 BorderThickness = new Thickness(selected ? 3 : 1),

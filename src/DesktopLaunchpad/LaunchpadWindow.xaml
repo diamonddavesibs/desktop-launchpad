@@ -12,9 +12,9 @@
 
     <Window.Resources>
         <Style x:Key="HeaderButton" TargetType="Button">
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Background" Value="#26FFFFFF" />
-            <Setter Property="BorderBrush" Value="#40FFFFFF" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+            <Setter Property="Background" Value="{DynamicResource ThemeButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeButtonBorder}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="16,8" />
             <Setter Property="Margin" Value="10,0,0,0" />
@@ -29,7 +29,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="BorderBrush" Value="#C0FFFFFF" />
+                                <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource ThemeAccent}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Bg" Property="Opacity" Value="0.4" />
@@ -42,21 +42,26 @@
     </Window.Resources>
 
     <!-- Dimmed backdrop over the whole screen. Clicking empty space closes the launchpad. -->
-    <Grid x:Name="Backdrop" Background="#CC101418" MouseLeftButtonDown="Backdrop_MouseLeftButtonDown">
+    <!-- The Backdrop's own background is the optional picture; the BackdropTint layer
+         on top of it is the theme color. Both are set from the current theme in code. -->
+    <Grid x:Name="Backdrop" Background="Transparent" MouseLeftButtonDown="Backdrop_MouseLeftButtonDown">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <Border x:Name="BackdropTint" Grid.RowSpan="3" Background="#CC101418" />
+
         <Grid Grid.Row="0" Margin="48,40,48,0">
             <StackPanel>
-                <TextBlock Text="Launchpad" FontSize="36" FontWeight="SemiBold" Foreground="White" />
-                <TextBlock x:Name="ClockText" FontSize="16" Foreground="#B0BAC5" Margin="0,4,0,0" />
+                <TextBlock Text="Launchpad" FontSize="36" FontWeight="SemiBold" Foreground="{DynamicResource ThemeText}" />
+                <TextBlock x:Name="ClockText" FontSize="16" Foreground="{DynamicResource ThemeSubtleText}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Button x:Name="AddButton" Style="{StaticResource HeaderButton}" Content="+  Add card"
                         Visibility="Collapsed" Click="AddButton_Click" />
+                <Button x:Name="ThemeButton" Style="{StaticResource HeaderButton}" Content="Theme" Click="ThemeButton_Click" />
                 <Button x:Name="EditButton" Style="{StaticResource HeaderButton}" Content="Edit" Click="EditButton_Click" />
             </StackPanel>
         </Grid>
@@ -67,6 +72,6 @@
             <Canvas x:Name="CardCanvas" HorizontalAlignment="Left" VerticalAlignment="Top" />
         </ScrollViewer>
 
-        <TextBlock x:Name="FooterText" Grid.Row="2" Margin="48,0,48,24" Foreground="#80909C" FontSize="13" />
+        <TextBlock x:Name="FooterText" Grid.Row="2" Margin="48,0,48,24" Foreground="{DynamicResource ThemeFaintText}" FontSize="13" />
     </Grid>
 </Window>
