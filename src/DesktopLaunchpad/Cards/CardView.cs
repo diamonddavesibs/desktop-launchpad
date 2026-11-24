@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using DesktopLaunchpad.Themes;
 
 namespace DesktopLaunchpad.Cards;
 
@@ -19,11 +20,10 @@ public sealed class CardView : Border
     private const double GridSize = 10;
     private const double DragThreshold = 4;
 
+    /// <summary>The see-through default card look, used for the "Default" swatch in the card editor.</summary>
     internal static readonly Brush DefaultBackground = Frozen(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF));
-    internal static readonly Brush SubtleText = Frozen(Color.FromRgb(0xC8, 0xD0, 0xD8));
-    private static readonly Brush BorderColor = Frozen(Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF));
-    private static readonly Brush HoverBorder = Frozen(Color.FromArgb(0xC0, 0xFF, 0xFF, 0xFF));
-    private static readonly Brush EditBorder = Frozen(Color.FromRgb(0xFF, 0xC8, 0x3C));
+
+    private readonly Theme _theme = Theme.Current;
 
     private readonly StackPanel _editButtons;
     private readonly Thumb _resizeGrip;
@@ -50,9 +50,11 @@ public sealed class CardView : Border
         Width = card.Width ?? DefaultWidth;
         Height = card.Height ?? DefaultHeight;
         Padding = new Thickness(18, 16, 18, 16);
-        CornerRadius = new CornerRadius(14);
-        Background = ParseBrush(card.Color) ?? DefaultBackground;
-        BorderBrush = BorderColor;
+        CornerRadius = new CornerRadius(_theme.CornerRadius);
+        var custom = ParseBrush(card.Color);
+        Background = custom ?? _theme.Card;
+        var (textBrush, subtleBrush) = _theme.TextOn(custom);
+        BorderBrush = _theme.CardBorder;
         BorderThickness = new Thickness(1);
         Cursor = Cursors.Hand;
         ToolTip = card.Type == CardType.Workspace
@@ -62,13 +64,13 @@ public sealed class CardView : Border
         RenderTransform = new ScaleTransform(1, 1);
 
         var content = new StackPanel();
-        content.Children.Add(BuildIcon(card));
+        content.Children.Add(BuildIcon(card, textBrush));
         content.Children.Add(new TextBlock
         {
             Text = string.IsNullOrWhiteSpace(card.Title) ? (card.Type == CardType.Workspace ? "Workspace" : card.Target) : card.Title,
             FontSize = 17,
             FontWeight = FontWeights.SemiBold,
-            Foreground = Brushes.White,
+            Foreground = textBrush,
             TextTrimming = TextTrimming.CharacterEllipsis,
             Margin = new Thickness(0, 12, 0, 0),
         });
@@ -76,7 +78,7 @@ public sealed class CardView : Border
         {
             Text = Describe(card),
             FontSize = 12,
-            Foreground = SubtleText,
+            Foreground = subtleBrush,
             TextTrimming = TextTrimming.CharacterEllipsis,
             Margin = new Thickness(0, 2, 0, 0),
         });
@@ -102,7 +104,7 @@ public sealed class CardView : Border
             Cursor = Cursors.SizeNWSE,
             Visibility = Visibility.Collapsed,
             ToolTip = "Drag to resize",
-            Template = ResizeGripTemplate(),
+            Template = ResizeGripTemplate(_theme.Accent),
         };
         _resizeGrip.DragDelta += (_, e) =>
         {
@@ -122,8 +124,8 @@ public sealed class CardView : Border
         root.Children.Add(_resizeGrip);
         Child = root;
 
-        MouseEnter += (_, _) => { if (!_isEditing) { BorderBrush = HoverBorder; SetScale(1.03); } };
-        MouseLeave += (_, _) => { if (!_isEditing) { BorderBrush = BorderColor; SetScale(1.0); } };
+        MouseEnter += (_, _) => { if (!_isEditing) { BorderBrush = _theme.CardHover; SetScale(1.03); } };
+        MouseLeave += (_, _) => { if (!_isEditing) { BorderBrush = _theme.CardBorder; SetScale(1.0); } };
         MouseLeftButtonDown += OnPress;
         MouseMove += OnMove;
         MouseLeftButtonUp += OnRelease;
@@ -138,7 +140,7 @@ public sealed class CardView : Border
             _isEditing = value;
             _editButtons.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
             _resizeGrip.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
-            BorderBrush = value ? EditBorder : BorderColor;
+            BorderBrush = value ? _theme.Accent : _theme.CardBorder;
             BorderThickness = new Thickness(value ? 1.5 : 1);
             Cursor = value ? Cursors.SizeAll : Cursors.Hand;
             SetScale(1.0);
@@ -226,17 +228,20 @@ public sealed class CardView : Border
     /// <summary>A non-clickable card used for "no cards" and error messages.</summary>
     public static FrameworkElement CreateMessage(string heading, string body, bool isError = false)
     {
+        var theme = Theme.Current;
+        var background = isError ? Frozen(Color.FromArgb(0xCC, 0xB9, 0x1C, 0x1C)) : theme.Card;
+        var (text, subtle) = isError ? (Brushes.White, Frozen(Color.FromRgb(0xFE, 0xE2, 0xE2))) : (theme.Text, theme.SubtleText);
         var panel = new StackPanel();
-        panel.Children.Add(new TextBlock { Text = heading, FontSize = 18, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White });
-        panel.Children.Add(new TextBlock { Text = body, TextWrapping = TextWrapping.Wrap, Foreground = SubtleText, Margin = new Thickness(0, 6, 0, 0) });
+        panel.Children.Add(new TextBlock { Text = heading, FontSize = 18, FontWeight = FontWeights.SemiBold, Foreground = text });
+        panel.Children.Add(new TextBlock { Text = body, TextWrapping = TextWrapping.Wrap, Foreground = subtle, Margin = new Thickness(0, 6, 0, 0) });
 
         var border = new Border
         {
             Width = 460,
             Padding = new Thickness(20),
-            CornerRadius = new CornerRadius(14),
-            Background = isError ? Frozen(Color.FromArgb(0x66, 0xB9, 0x1C, 0x1C)) : DefaultBackground,
-            BorderBrush = BorderColor,
+            CornerRadius = new CornerRadius(theme.CornerRadius),
+            Background = background,
+            BorderBrush = theme.CardBorder,
             BorderThickness = new Thickness(1),
             Child = panel,
         };
@@ -264,17 +269,17 @@ public sealed class CardView : Border
         return button;
     }
 
-    private static ControlTemplate ResizeGripTemplate()
+    private static ControlTemplate ResizeGripTemplate(Brush fill)
     {
-        // A small yellow dot in the bottom-right corner.
+        // A small dot in the theme's accent color in the bottom-right corner.
         var ellipse = new FrameworkElementFactory(typeof(System.Windows.Shapes.Ellipse));
-        ellipse.SetValue(System.Windows.Shapes.Shape.FillProperty, EditBorder);
+        ellipse.SetValue(System.Windows.Shapes.Shape.FillProperty, fill);
         ellipse.SetValue(System.Windows.Shapes.Shape.StrokeProperty, Brushes.White);
         ellipse.SetValue(System.Windows.Shapes.Shape.StrokeThicknessProperty, 1.5);
         return new ControlTemplate(typeof(Thumb)) { VisualTree = ellipse };
     }
 
-    private static FrameworkElement BuildIcon(CardDefinition card)
+    private static FrameworkElement BuildIcon(CardDefinition card, Brush foreground)
     {
         if (card.Type == CardType.Program && CardIcons.ForProgram(card.Target) is ImageSource image)
             return new Image { Source = image, Width = 36, Height = 36, HorizontalAlignment = HorizontalAlignment.Left };
@@ -285,7 +290,7 @@ public sealed class CardView : Border
             Text = card.Type == CardType.Website ? "" : "",
             FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
             FontSize = 32,
-            Foreground = Brushes.White,
+            Foreground = foreground,
             HorizontalAlignment = HorizontalAlignment.Left,
         };
     }

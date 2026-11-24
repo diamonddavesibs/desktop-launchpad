@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using DesktopLaunchpad.Cards;
+using DesktopLaunchpad.Themes;
 using Forms = System.Windows.Forms;
 
 namespace DesktopLaunchpad;
@@ -32,6 +33,7 @@ public partial class LaunchpadWindow : Window
     {
         InitializeComponent();
         FooterText.Text = NormalFooter;
+        ApplyTheme(SettingsStore.Load());
 
         _clock = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _clock.Tick += (_, _) => UpdateClock();
@@ -295,6 +297,65 @@ public partial class LaunchpadWindow : Window
             _dialogOpen = false;
             Activate();
         }
+    }
+
+    // ----- Theme -----
+
+    /// <summary>Switches to a look and redraws the cards in it. Does not save it.</summary>
+    public void ApplyTheme(ThemeSettings settings)
+    {
+        Theme.SetCurrent(settings);
+        var theme = Theme.Current;
+
+        Resources["ThemeText"] = theme.Text;
+        Resources["ThemeSubtleText"] = theme.SubtleText;
+        Resources["ThemeFaintText"] = theme.FaintText;
+        Resources["ThemeAccent"] = theme.Accent;
+        Resources["ThemeButtonBackground"] = theme.ButtonBackground;
+        Resources["ThemeButtonBorder"] = theme.ButtonBorder;
+        Backdrop.Background = theme.BackgroundImage ?? Brushes.Transparent;
+        BackdropTint.Background = theme.Backdrop;
+
+        if (!IsVisible) return;
+        if (!EditButton.IsEnabled)
+        {
+            LoadCards(); // showing the cards.json error; redraw it in the new look
+            return;
+        }
+        foreach (var view in _views) view.StoreLayout(); // keep cards where they are
+        RebuildViews();
+    }
+
+    private void ThemeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isEditing) SetEditing(false);
+        SaveCardsIfLoaded();
+
+        var original = SettingsStore.Load();
+        var picker = new ThemeWindow(original, ApplyTheme) { Owner = this };
+        if (RunModal(() => picker.ShowDialog()) == true && picker.Result is not null)
+        {
+            try
+            {
+                SettingsStore.Save(picker.Result);
+            }
+            catch (Exception ex)
+            {
+                RunModal(() => MessageBox.Show(this, $"Couldn't save your theme: {ex.Message}", "Desktop Launchpad",
+                    MessageBoxButton.OK, MessageBoxImage.Warning));
+            }
+            ApplyTheme(picker.Result);
+        }
+        else
+        {
+            ApplyTheme(original); // undo the live preview
+        }
+    }
+
+    /// <summary>Keeps card moves made in edit mode before redrawing the cards in a new look.</summary>
+    private void SaveCardsIfLoaded()
+    {
+        if (_views.Count > 0 && EditButton.IsEnabled) SaveCards();
     }
 
     // ----- Misc -----
